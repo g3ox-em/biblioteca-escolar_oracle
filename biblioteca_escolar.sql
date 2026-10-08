@@ -179,11 +179,11 @@ INSERT INTO libro_autor (id_libro, id_autor) VALUES (4, 4);
 
 /*Estudiantes*/
 INSERT INTO estudiantes (carnet, nombre, apellido, grado_seccion, correo)
-VALUES ('1190-24-13377', 'Henry Alejandro', 'Bardales Aguilar', 'Quinto Bachillerato - A', 'hbardales@miumg.edu.gt');
+VALUES ('1190-24-0000', 'Nombre', 'Apellido', 'Quinto Bachillerato - A', 'correo@miumg.edu.gt');
 INSERT INTO estudiantes (carnet, nombre, apellido, grado_seccion, correo)
-VALUES ('1190-24-7563', 'Oscar Eduardo', 'Urzúa Mejía', 'Quinto Bachillerato - A', 'ourzua@miumg.edu.gt');
+VALUES ('1190-24-0000', 'Nombre', 'Apellido', 'Quinto Bachillerato - A', 'correo@miumg.edu.gt');
 INSERT INTO estudiantes (carnet, nombre, apellido, grado_seccion, correo)
-VALUES ('1190-24-3065', 'Jhonatan Estuardo', 'García López', 'Quinto Bachillerato - B', 'jgarcia@miumg.edu.gt');
+VALUES ('1190-24-0000', 'Nombre', 'Apellido', 'Quinto Bachillerato - B', 'correo@miumg.edu.gt');
 
 /*Préstamos*/
 INSERT INTO prestamos (id_estudiante, id_libro, fecha_prestamo, fecha_limite, estado)
