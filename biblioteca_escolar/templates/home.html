@@ -1,1 +1,81 @@
-{% extends 'base.html' %}{% block content %}<div class="heading"><div><p class="eyebrow">TU BIBLIOTECA, EN ORDEN</p><h1>Panel de biblioteca</h1><p>Consulta el catálogo y administra la circulación de libros.</p></div><a class="button" href="/prestamos/nuevo">+ Nuevo préstamo</a></div><section class="cards">{% for key,label in [('libros','Títulos registrados'),('disponibles','Ejemplares disponibles'),('estudiantes','Estudiantes'),('pendientes','Préstamos pendientes'),('atrasados','Préstamos vencidos'),('prestamos','Préstamos históricos')] %}<article><span>{{ label }}</span><strong>{{ stats[key] }}</strong></article>{% endfor %}</section><section class="panel"><h2>¿Qué deseas hacer?</h2><div class="actions"><a class="button" href="/catalogo/libros">Consultar libros</a><a class="button secondary" href="/catalogo/estudiantes/editar">Registrar estudiante</a><a class="button secondary" href="/prestamos">Registrar devolución</a></div><p>Los préstamos vencidos se identifican según la fecha del servidor Oracle. Los reportes se filtran por fecha de préstamo.</p></section>{% endblock %}
+{% extends 'base.html' %}
+{% block content %}
+<div class="heading">
+<div>
+<p class="eyebrow">TU BIBLIOTECA, EN ORDEN</p>
+<h1>Panel de biblioteca</h1>
+<p>Consulta el catálogo, estadísticas de circulación y control de solvencias.</p>
+</div>
+{% if current_user and current_user.rol == 'ADMIN' %}
+<a class="button" href="/prestamos/nuevo">+ Nuevo préstamo</a>
+{% endif %}
+</div>
+<section class="cards">
+{% for key, label in [('libros','Títulos registrados'),('disponibles','Ejemplares disponibles'),('estudiantes','Estudiantes'),('pendientes','Préstamos pendientes'),('atrasados','Préstamos vencidos'),('prestamos','Préstamos históricos'),('reservas','Reservas en espera')] %}
+<article>
+<span>{{ label }}</span>
+<strong>{{ stats[key] }}</strong>
+</article>
+{% endfor %}
+</section>
+
+<section class="dashboard-charts">
+<div class="chart-card">
+<h3>Distribución de préstamos</h3>
+<div class="bars-container">
+<div class="bar-row">
+<span class="bar-label">Activos a tiempo</span>
+<div class="bar-track">
+<div class="bar-fill active-bar" style="width: {{ ((stats.activos / (stats.prestamos or 1)) * 100)|round(1) }}%;"></div>
+</div>
+<span class="bar-val">{{ stats.activos }}</span>
+</div>
+<div class="bar-row">
+<span class="bar-label">Atrasados (en mora)</span>
+<div class="bar-track">
+<div class="bar-fill late-bar" style="width: {{ ((stats.atrasados / (stats.prestamos or 1)) * 100)|round(1) }}%;"></div>
+</div>
+<span class="bar-val">{{ stats.atrasados }}</span>
+</div>
+<div class="bar-row">
+<span class="bar-label">Devueltos</span>
+<div class="bar-track">
+<div class="bar-fill return-bar" style="width: {{ ((stats.devueltos / (stats.prestamos or 1)) * 100)|round(1) }}%;"></div>
+</div>
+<span class="bar-val">{{ stats.devueltos }}</span>
+</div>
+</div>
+</div>
+
+<div class="chart-card">
+<h3>Top 5 libros más solicitados</h3>
+<div class="top-list">
+{% for b in stats.top_books %}
+<div class="top-item">
+<span class="top-rank">{{ loop.index }}</span>
+<span class="top-title">{{ b.titulo }}</span>
+<span class="top-count">{{ b.n }} préstamos</span>
+</div>
+{% else %}
+<p class="hint">Sin datos suficientes de préstamos.</p>
+{% endfor %}
+</div>
+</div>
+</section>
+
+<section class="panel">
+<h2>Accesos directos del sistema</h2>
+<div class="actions">
+<a class="button" href="/catalogo/libros">Consultar catálogo OPAC</a>
+<a class="button secondary" href="/solvencia">Verificar solvencia escolar</a>
+<a class="button secondary" href="/reservas">Ver reservas activas</a>
+{% if current_user and current_user.rol == 'ADMIN' %}
+<a class="button secondary" href="/prestamos">Registrar devolución o renovación</a>
+<a class="button secondary" href="/catalogo/estudiantes/editar">Registrar estudiante</a>
+<a class="button secondary" href="/notificaciones">Ver avisos de mora</a>
+<a class="button secondary" href="/auditoria">Ver registro de auditoría</a>
+{% endif %}
+</div>
+<p>Límite por estudiante: máximo 3 libros activos simultáneos. Los préstamos vencidos impiden nuevos préstamos hasta su devolución.</p>
+</section>
+{% endblock %}

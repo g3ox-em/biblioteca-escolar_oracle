@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="heading">
+<div>
+<p class="eyebrow">AUTOMATIZACIÓN</p>
+<h1>Avisos y recordatorios de vencimiento</h1>
+<p>Alertas automáticas de préstamos por vencer en 48 horas y libros atrasados con mora.</p>
+</div>
+</div>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Préstamo</th>
+<th>Estudiante</th>
+<th>Correo institucional</th>
+<th>Libro</th>
+<th>Fecha límite</th>
+<th>Situación</th>
+<th>Acción automática</th>
+</tr>
+</thead>
+<tbody>
+{% for a in alerts %}
+<tr>
+<td>#{{ a.id_prestamo }}</td>
+<td>
+{{ a.estudiante }}
+<small>{{ a.carnet }}</small>
+</td>
+<td>{{ a.correo or 'Sin correo registrado' }}</td>
+<td>{{ a.titulo }}</td>
+<td>{{ a.fecha_limite.strftime('%d/%m/%Y') if a.fecha_limite else '—' }}</td>
+<td>
+<span class="badge {{ 'Atrasado' if a.tipo_alerta == 'Atrasado' else 'Activo' }}">
+{{ a.tipo_alerta }} {% if a.dias_diferencia > 0 %}(hace {{ a.dias_diferencia }} días){% endif %}
+</span>
+</td>
+<td>
+{% if a.correo %}
+<form method="post" action="/notificaciones">
+<input type="hidden" name="csrf" value="{{ session.csrf }}">
+<input type="hidden" name="prestamo_id" value="{{ a.id_prestamo }}">
+<button class="small-btn">Enviar recordatorio</button>
+</form>
+{% else %}
+<span class="hint">Actualizar correo</span>
+{% endif %}
+</td>
+</tr>
+{% else %}
+<tr>
+<td colspan="7">No existen préstamos atrasados ni por vencer en este momento. La circulación se encuentra al día.</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% endblock %}

@@ -1,1 +1,23 @@
-{% extends 'base.html' %}{% block content %}<p class="eyebrow">CIRCULACIÓN / PRÉSTAMO {{ row.id_prestamo }}</p><h1>Registrar devolución</h1><p>{{ row.titulo }} · {{ row.estudiante }}</p><form class="panel form-grid" method="post" onsubmit="return confirm('¿Confirmar devolución y liberar un ejemplar?')"><input type="hidden" name="csrf" value="{{ session.csrf }}"><label>Fecha de devolución<input name="fecha" type="date" value="{{ today }}" min="{{ row.fecha_prestamo.strftime('%Y-%m-%d') }}" max="{{ today }}" required></label><label>Multa adicional por daño (Q).<input name="multa" type="number" step="0.01" min="0" max="9999.99" value="0" required></label><label>Observaciones<textarea name="observaciones" maxlength="200" rows="4"></textarea></label><p class="hint">La multa por atraso (Q5.00 por día) se calcula automáticamente al confirmar. Si el libro llegó dañado, escribe aquí el monto adicional; si no, déjalo en 0.</p><div class="actions"><button>Confirmar devolución</button><a href="/prestamos">Cancelar</a></div></form>{% endblock %}
+{% extends 'base.html' %}
+{% block content %}
+<p class="eyebrow">CIRCULACIÓN / PRÉSTAMO #{{ row.id_prestamo }}</p>
+<h1>Registrar devolución</h1>
+<p>{{ row.titulo }} · Estudiante: {{ row.estudiante }}</p>
+<form class="panel form-grid" method="post" onsubmit="return confirm('¿Confirmar devolución y liberar un ejemplar?')">
+<input type="hidden" name="csrf" value="{{ session.csrf }}">
+<label>Fecha de devolución *
+<input name="fecha" type="date" value="{{ today }}" min="{{ row.fecha_prestamo.strftime('%Y-%m-%d') }}" max="{{ today }}" required>
+</label>
+<label>Multa adicional por daño (Q)
+<input name="multa" type="number" step="0.01" min="0" max="9999.99" value="0" required>
+</label>
+<label>Observaciones
+<textarea name="observaciones" maxlength="200" rows="3" placeholder="Estado del libro o notas de entrega"></textarea>
+</label>
+<p class="hint">La mora por atraso (Q 5.00 por día hábil o calendario) se calcula de forma automática. Si el ejemplar presenta roturas o manchas, añade aquí el recargo por daño.</p>
+<div class="actions">
+<button>Confirmar devolución</button>
+<a href="/prestamos">Cancelar</a>
+</div>
+</form>
+{% endblock %}

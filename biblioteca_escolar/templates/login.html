@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="login-wrapper">
+<div class="panel login-panel">
+<p class="eyebrow">CONTROL DE ACCESO</p>
+<h1>Iniciar sesión</h1>
+<p>Ingresa tus credenciales institucionales para gestionar préstamos y catálogos.</p>
+<form method="post" action="{{ url_for('login', next=request.args.get('next')) }}">
+<input type="hidden" name="csrf" value="{{ session.csrf }}">
+<label>Usuario
+<input type="text" name="usuario" required autofocus placeholder="Ej. admin o estudiante">
+</label>
+<label>Contraseña
+<input type="password" name="clave" required placeholder="••••••••">
+</label>
+<div class="actions">
+<button>Ingresar al sistema</button>
+<a class="button secondary" href="/">Continuar como consulta (OPAC)</a>
+</div>
+</form>
+<div class="demo-box">
+<p><strong>Cuentas predeterminadas en Oracle:</strong></p>
+<ul>
+<li><strong>Administrador:</strong> usuario <code>admin</code> · clave <code>admin123</code></li>
+<li><strong>Estudiante Demo:</strong> usuario <code>estudiante</code> · clave <code>estudiante123</code></li>
+</ul>
+</div>
+</div>
+</div>
+{% endblock %}

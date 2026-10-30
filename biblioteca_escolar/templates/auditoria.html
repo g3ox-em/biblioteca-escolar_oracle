@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="heading">
+<div>
+<p class="eyebrow">SEGURIDAD Y CONTROL INTERNO</p>
+<h1>Auditoría del sistema</h1>
+<p>{{ total_rows }} eventos registrados · Página {{ page }} de {{ total_pages }}</p>
+</div>
+</div>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Fecha y hora</th>
+<th>Usuario</th>
+<th>Tabla</th>
+<th>Operación</th>
+<th>ID Registro</th>
+<th>Detalles del evento</th>
+</tr>
+</thead>
+<tbody>
+{% for a in rows %}
+<tr>
+<td>#{{ a.id_auditoria }}</td>
+<td>{{ a.fecha_hora.strftime('%d/%m/%Y %H:%M:%S') if a.fecha_hora else '—' }}</td>
+<td><strong>{{ a.usuario }}</strong></td>
+<td><span class="badge">{{ a.tabla_afectada }}</span></td>
+<td>
+<span class="badge {{ 'Devuelto' if a.operacion in ['INSERT','LOGIN'] else ('Atrasado' if a.operacion == 'DELETE' else 'Activo') }}">
+{{ a.operacion }}
+</span>
+</td>
+<td>{{ a.id_registro if a.id_registro is not none else '—' }}</td>
+<td>{{ a.detalles or '—' }}</td>
+</tr>
+{% else %}
+<tr>
+<td colspan="7">No hay registros de auditoría almacenados.</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+{% if total_pages > 1 %}
+<div class="pagination">
+{% if page > 1 %}
+<a class="page-link" href="{{ url_for('auditoria', page=page-1) }}">« Anterior</a>
+{% endif %}
+<span class="page-current">Página {{ page }} de {{ total_pages }}</span>
+{% if page < total_pages %}
+<a class="page-link" href="{{ url_for('auditoria', page=page+1) }}">Siguiente »</a>
+{% endif %}
+</div>
+{% endif %}
+{% endblock %}

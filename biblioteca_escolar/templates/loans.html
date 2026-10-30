@@ -1,1 +1,108 @@
-{% extends 'base.html' %}{% block content %}<div class="heading"><div><p class="eyebrow">CIRCULACIÓN</p><h1>Préstamos y devoluciones</h1><p>Historial, vencimientos y reportes</p></div><a class="button" href="/prestamos/nuevo">+ Nuevo préstamo</a></div><form class="filters" method="get"><label>Buscar<input name="q" value="{{ request.args.get('q','') }}" placeholder="Carnet, estudiante o libro"></label><label>Estado<select name="estado"><option value="">Todos</option>{% for s in ['Activo','Atrasado','Devuelto'] %}<option {{ 'selected' if request.args.get('estado')==s else '' }}>{{ s }}</option>{% endfor %}</select></label><label>Desde<input type="date" name="desde" value="{{ request.args.get('desde','') }}"></label><label>Hasta<input type="date" name="hasta" value="{{ request.args.get('hasta','') }}"></label><button>Filtrar</button><a href="/prestamos">Limpiar</a></form><div class="actions report"><a class="button secondary" href="{{ url_for('export',**request.args.to_dict()) }}">Descargar CSV para Excel</a><button class="secondary" onclick="window.print()">Imprimir / guardar PDF</button></div><div class="table-wrap"><table><thead><tr><th>No.</th><th>Estudiante</th><th>Libro</th><th>Préstamo</th><th>Límite</th><th>Estado</th><th>Devolución</th><th>Multa</th><th>Acción</th></tr></thead><tbody>{% for r in rows %}<tr><td>{{ r.id_prestamo }}</td><td>{{ r.estudiante }}<small>{{ r.carnet }}</small></td><td>{{ r.titulo }}</td><td>{{ r.fecha_prestamo.strftime('%d/%m/%Y') if r.fecha_prestamo else '—' }}</td><td>{{ r.fecha_limite.strftime('%d/%m/%Y') if r.fecha_limite else '—' }}</td><td><span class="badge {{ r.estado }}">{{ r.estado }}</span></td><td>{{ r.fecha_devolucion.strftime('%d/%m/%Y') if r.fecha_devolucion else '—' }}</td><td>{{ 'Q %.2f'|format(r.monto_multa) if r.monto_multa is not none else '—' }}</td><td>{% if r.estado!='Devuelto' %}<a href="{{ url_for('return_create',ident=r.id_prestamo) }}">Devolver</a>{% else %}{{ r.observaciones or 'Completado' }}{% endif %}</td></tr>{% else %}<tr><td colspan="9">No hay préstamos con estos filtros.</td></tr>{% endfor %}</tbody></table></div>{% endblock %}
+{% extends 'base.html' %}
+{% block content %}
+<div class="heading">
+<div>
+<p class="eyebrow">CIRCULACIÓN</p>
+<h1>Préstamos y devoluciones</h1>
+<p>{{ total_rows }} préstamos en el historial · Página {{ page }} de {{ total_pages }}</p>
+</div>
+{% if current_user and current_user.rol == 'ADMIN' %}
+<a class="button" href="/prestamos/nuevo">+ Nuevo préstamo</a>
+{% endif %}
+</div>
+
+<form class="filters" method="get">
+<label>Buscar
+<input name="q" value="{{ request.args.get('q','') }}" placeholder="Carnet, estudiante o libro">
+</label>
+<label>Estado
+<select name="estado">
+<option value="">Todos</option>
+{% for s in ['Activo','Atrasado','Devuelto'] %}
+<option {{ 'selected' if request.args.get('estado')==s else '' }}>{{ s }}</option>
+{% endfor %}
+</select>
+</label>
+<label>Desde
+<input type="date" name="desde" value="{{ request.args.get('desde','') }}">
+</label>
+<label>Hasta
+<input type="date" name="hasta" value="{{ request.args.get('hasta','') }}">
+</label>
+<button>Filtrar</button>
+<a href="/prestamos">Limpiar</a>
+</form>
+
+<div class="actions report">
+<a class="button secondary" href="{{ url_for('export', **request.args.to_dict()) }}">Descargar CSV para Excel</a>
+<button class="secondary" onclick="window.print()">Imprimir / guardar PDF</button>
+</div>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>No.</th>
+<th>Estudiante</th>
+<th>Libro</th>
+<th>Préstamo</th>
+<th>Límite</th>
+<th>Estado</th>
+<th>Devolución</th>
+<th>Multa</th>
+<th>Acciones</th>
+</tr>
+</thead>
+<tbody>
+{% for r in rows %}
+<tr>
+<td>{{ r.id_prestamo }}</td>
+<td>
+{{ r.estudiante }}
+<small>{{ r.carnet }}</small>
+</td>
+<td>{{ r.titulo }}</td>
+<td>{{ r.fecha_prestamo.strftime('%d/%m/%Y') if r.fecha_prestamo else '—' }}</td>
+<td>{{ r.fecha_limite.strftime('%d/%m/%Y') if r.fecha_limite else '—' }}</td>
+<td><span class="badge {{ r.estado }}">{{ r.estado }}</span></td>
+<td>{{ r.fecha_devolucion.strftime('%d/%m/%Y') if r.fecha_devolucion else '—' }}</td>
+<td>{{ 'Q %.2f'|format(r.monto_multa) if r.monto_multa is not none else '—' }}</td>
+<td class="loan-actions">
+{% if r.estado != 'Devuelto' %}
+{% if current_user and current_user.rol == 'ADMIN' %}
+<a class="button small-btn" href="{{ url_for('return_create', ident=r.id_prestamo) }}">Devolver</a>
+{% if r.estado == 'Activo' %}
+<form method="post" action="{{ url_for('loan_renew', ident=r.id_prestamo) }}" onsubmit="return confirm('¿Renovar préstamo por 7 días adicionales?')">
+<input type="hidden" name="csrf" value="{{ session.csrf }}">
+<button class="small-btn secondary">Renovar</button>
+</form>
+{% endif %}
+{% else %}
+<span class="badge {{ r.estado }}">{{ r.estado }}</span>
+{% endif %}
+{% else %}
+<small>{{ r.observaciones or 'Completado sin observaciones' }}</small>
+{% endif %}
+</td>
+</tr>
+{% else %}
+<tr>
+<td colspan="9">No hay préstamos con estos filtros.</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+{% if total_pages > 1 %}
+<div class="pagination">
+{% if page > 1 %}
+<a class="page-link" href="{{ url_for('loans', q=request.args.get('q',''), estado=request.args.get('estado',''), desde=request.args.get('desde',''), hasta=request.args.get('hasta',''), page=page-1) }}">« Anterior</a>
+{% endif %}
+<span class="page-current">Página {{ page }} de {{ total_pages }}</span>
+{% if page < total_pages %}
+<a class="page-link" href="{{ url_for('loans', q=request.args.get('q',''), estado=request.args.get('estado',''), desde=request.args.get('desde',''), hasta=request.args.get('hasta',''), page=page+1) }}">Siguiente »</a>
+{% endif %}
+</div>
+{% endif %}
+{% endblock %}

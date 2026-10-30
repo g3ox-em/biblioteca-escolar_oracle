@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="heading">
+<div>
+<p class="eyebrow">CONSTANCIAS Y CERTIFICACIONES</p>
+<h1>Solvencia de biblioteca</h1>
+<p>Verificación de préstamos activos, mora acumulada y emisión de paz y salvo estudiantil.</p>
+</div>
+<button class="secondary" onclick="window.print()">Imprimir documento</button>
+</div>
+
+<form class="panel form-grid" method="post" action="/solvencia">
+<input type="hidden" name="csrf" value="{{ session.csrf }}">
+<label>Buscar por número de carnet
+<input type="text" name="carnet" value="{{ carnet }}" placeholder="Ej. 1190-24-1001" required>
+</label>
+<div class="actions">
+<button>Consultar solvencia</button>
+</div>
+</form>
+
+{% if result %}
+{% if result.is_solvent %}
+<div class="certificate-paper">
+<div class="cert-header">
+<h2>UNIVERSIDAD MARIANO GÁLVEZ DE GUATEMALA</h2>
+<h3>DIRECCIÓN GENERAL DE BIBLIOTECAS Y CENTROS DE INFORMACIÓN</h3>
+<p class="cert-folio">FOLIO NO. {{ result.folio }}</p>
+</div>
+<div class="cert-body">
+<h4>CONSTANCIA DE PAZ Y SALVO (SOLVENCIA)</h4>
+<p>
+Por este medio se hace constar que el estudiante <strong>{{ result.student.nombre }} {{ result.student.apellido }}</strong>, 
+inscrito con el número de carnet <strong>{{ result.student.carnet }}</strong>, perteneciente a la sección <strong>{{ result.student.grado_seccion or 'General' }}</strong>, 
+<strong>NO PRESENTA PRÉSTAMOS ACTIVOS NI MULTAS PENDIENTES DE PAGO</strong> con la biblioteca institucional a la presente fecha.
+</p>
+<p>
+Se extiende la presente solvencia a solicitud del interesado para los trámites académicos, de reinscripción o graduación que correspondan.
+</p>
+<div class="cert-footer">
+<div class="cert-signature">
+<div class="line"></div>
+<p>Licda. Claudia Reyes<br>Encargada de Circulación y Préstamos</p>
+</div>
+<div class="cert-seal">
+<div class="seal-box">SELLO OFICIAL<br>BIBLIOTECA UMG<br>{{ result.date_emitted }}</div>
+</div>
+</div>
+</div>
+</div>
+{% else %}
+<div class="panel danger-box">
+<h3>⚠️ ESTUDIANTE NO SOLVENTE</h3>
+<p>El estudiante <strong>{{ result.student.nombre }} {{ result.student.apellido }}</strong> (Carnet: {{ result.student.carnet }}) tiene obligaciones pendientes con la biblioteca:</p>
+
+{% if result.pending_loans %}
+<h4>Libros pendientes de devolución:</h4>
+<ul>
+{% for p in result.pending_loans %}
+<li><strong>{{ p.titulo }}</strong> · Fecha límite: {{ p.fecha_limite.strftime('%d/%m/%Y') if p.fecha_limite else '—' }} · Estado: <span class="badge {{ p.estado }}">{{ p.estado }}</span></li>
+{% endfor %}
+</ul>
+{% endif %}
+
+{% if result.fines %}
+<h4>Multas pendientes de liquidación:</h4>
+<ul>
+{% for f in result.fines %}
+<li>Monto: Q {{ '%.2f'|format(f.monto_multa) }} · Observaciones: {{ f.observaciones or 'Mora por retraso' }}</li>
+{% endfor %}
+</ul>
+{% endif %}
+<p class="hint">El estudiante debe devolver los ejemplares físicos y cancelar cualquier saldo de mora para poder tramitar su constancia.</p>
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="heading">
+<div>
+<p class="eyebrow">CIRCULACIÓN</p>
+<h1>Reservas de libros</h1>
+<p>Apartado anticipado de libros que no tienen ejemplares disponibles actualmente.</p>
+</div>
+</div>
+
+<form class="panel form-grid" method="post" action="/reservas">
+<input type="hidden" name="csrf" value="{{ session.csrf }}">
+<label>Estudiante solicitante *
+<select name="estudiante" required>
+<option value="">Selecciona al estudiante</option>
+{% for s in students %}
+<option value="{{ s.id_estudiante }}">{{ s.nombre }}</option>
+{% endfor %}
+</select>
+</label>
+<label>Libro a reservar *
+<select name="libro" required>
+<option value="">Selecciona el libro</option>
+{% for b in books %}
+<option value="{{ b.id_libro }}">{{ b.titulo }} · ({{ b.disponible }} disponibles)</option>
+{% endfor %}
+</select>
+</label>
+<div class="actions">
+<button>Apartar / Reservar libro</button>
+</div>
+</form>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>No.</th>
+<th>Fecha de solicitud</th>
+<th>Estudiante</th>
+<th>Libro</th>
+<th>Existencia actual</th>
+<th>Estado</th>
+<th>Acciones</th>
+</tr>
+</thead>
+<tbody>
+{% for r in rows %}
+<tr>
+<td>#{{ r.id_reserva }}</td>
+<td>{{ r.fecha_reserva.strftime('%d/%m/%Y') if r.fecha_reserva else '—' }}</td>
+<td>
+{{ r.estudiante }}
+<small>{{ r.carnet }}</small>
+</td>
+<td>{{ r.titulo }}</td>
+<td>
+<span class="badge {{ 'Devuelto' if r.disponible > 0 else 'Atrasado' }}">
+{{ r.disponible }} disponibles
+</span>
+</td>
+<td>
+<span class="badge {{ 'Devuelto' if r.estado == 'Atendida' else ('Atrasado' if r.estado == 'Cancelada' else 'Activo') }}">
+{{ r.estado }}
+</span>
+</td>
+<td class="actions">
+{% if r.estado == 'Pendiente' %}
+<form method="post" action="{{ url_for('cancel_reservation', ident=r.id_reserva) }}" onsubmit="return confirm('¿Cancelar esta reserva?')">
+<input type="hidden" name="csrf" value="{{ session.csrf }}">
+<button class="danger small-btn">Cancelar</button>
+</form>
+{% else %}
+<span class="hint">—</span>
+{% endif %}
+</td>
+</tr>
+{% else %}
+<tr>
+<td colspan="7">No hay reservas registradas en este momento.</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% endblock %}

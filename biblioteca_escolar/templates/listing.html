@@ -1,1 +1,92 @@
-{% extends 'base.html' %}{% block content %}<div class="heading"><div><p class="eyebrow">CATÁLOGO</p><h1>{{ label }}</h1><p>{{ rows|length }} registros encontrados</p></div><a class="button" href="{{ url_for('edit',table=table) }}">+ Agregar</a></div><form class="filters" method="get"><input name="q" value="{{ term }}" placeholder="Buscar en {{ label|lower }}" aria-label="Buscar"><button>Buscar</button><a href="{{ url_for('listing',table=table) }}">Limpiar</a></form><div class="table-wrap"><table><thead><tr><th>ID</th>{% for f in fields %}<th>{{ f[1] }}</th>{% endfor %}<th>Acciones</th></tr></thead><tbody>{% for row in rows %}<tr><td>{{ row[pk] }}</td>{% for f in fields %}<td>{{ row[f[0]] if row[f[0]] is not none else '—' }}</td>{% endfor %}<td class="actions"><a href="{{ url_for('edit',table=table,ident=row[pk]) }}">Editar</a><form method="post" action="{{ url_for('delete',table=table,ident=row[pk]) }}" onsubmit="return confirm('¿Eliminar este registro? Esta acción no se puede deshacer.')"><input type="hidden" name="csrf" value="{{ session.csrf }}"><button class="danger">Eliminar</button></form></td></tr>{% else %}<tr><td colspan="20">No hay registros. Agrega uno para comenzar.</td></tr>{% endfor %}</tbody></table></div>{% endblock %}
+{% extends 'base.html' %}
+{% block content %}
+<div class="heading">
+<div>
+<p class="eyebrow">CATÁLOGO</p>
+<h1>{{ label }}</h1>
+<p>{{ total_rows }} registros en total · Página {{ page }} de {{ total_pages }}</p>
+</div>
+{% if current_user and current_user.rol == 'ADMIN' %}
+<a class="button" href="{{ url_for('edit', table=table) }}">+ Agregar {{ label[:-1] if label.endswith('s') else label }}</a>
+{% endif %}
+</div>
+
+<form class="filters" method="get">
+<input name="q" value="{{ term }}" placeholder="Buscar en {{ label|lower }}" aria-label="Buscar">
+<button>Buscar</button>
+<a href="{{ url_for('listing', table=table) }}">Limpiar</a>
+</form>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+{% if table == 'libros' %}
+<th>Portada</th>
+{% endif %}
+<th>ID</th>
+{% for f in fields %}
+<th>{{ f[1] }}</th>
+{% endfor %}
+<th>Acciones</th>
+</tr>
+</thead>
+<tbody>
+{% for row in rows %}
+<tr>
+{% if table == 'libros' %}
+<td class="cover-cell">
+{% if row.get('isbn') %}
+<img class="book-cover" src="https://covers.openlibrary.org/b/isbn/{{ row.get('isbn')|replace('-','') }}-S.jpg?default=false" alt="Portada" onerror="this.onerror=null;this.parentElement.innerHTML='<span class=\'cover-placeholder\'>📖</span>'">
+{% else %}
+<span class="cover-placeholder">📖</span>
+{% endif %}
+</td>
+{% endif %}
+<td>{{ row[pk] }}</td>
+{% for f in fields %}
+<td>
+{% if f[0] == 'disponible' %}
+<span class="badge {{ 'Devuelto' if row[f[0]] > 0 else 'Atrasado' }}">
+{{ row[f[0]] }} {{ 'disponible' if row[f[0]] == 1 else 'disponibles' }}
+</span>
+{% else %}
+{{ row[f[0]] if row[f[0]] is not none else '—' }}
+{% endif %}
+</td>
+{% endfor %}
+<td class="actions">
+{% if current_user and current_user.rol == 'ADMIN' %}
+<a href="{{ url_for('edit', table=table, ident=row[pk]) }}">Editar</a>
+<form method="post" action="{{ url_for('delete', table=table, ident=row[pk]) }}" onsubmit="return confirm('¿Eliminar este registro? Esta acción no se puede deshacer.')">
+<input type="hidden" name="csrf" value="{{ session.csrf }}">
+<button class="danger">Eliminar</button>
+</form>
+{% elif table == 'libros' and row.get('disponible', 0) == 0 %}
+<a class="button secondary small-btn" href="/reservas">Apartar libro</a>
+{% else %}
+<span class="hint">Solo lectura</span>
+{% endif %}
+</td>
+</tr>
+{% else %}
+<tr>
+<td colspan="20">No hay registros con los filtros seleccionados.</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+{% if total_pages > 1 %}
+<div class="pagination">
+{% if page > 1 %}
+<a class="page-link" href="{{ url_for('listing', table=table, q=term, page=page-1) }}">« Anterior</a>
+{% endif %}
+<span class="page-current">Página {{ page }} de {{ total_pages }}</span>
+{% if page < total_pages %}
+<a class="page-link" href="{{ url_for('listing', table=table, q=term, page=page+1) }}">Siguiente »</a>
+{% endif %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,1 +1,12 @@
-{% extends 'base.html' %}{% block content %}<div class="panel"><p class="eyebrow">REVISA LA OPERACIÓN</p><h1>No se pudo completar</h1><p>{{ message }}</p><a class="button" href="javascript:history.back()">Regresar</a><a href="/">Ir al inicio</a></div>{% endblock %}
+{% extends 'base.html' %}
+{% block content %}
+<div class="panel">
+<p class="eyebrow">AVISO DEL SISTEMA</p>
+<h1>No se pudo completar la operación</h1>
+<p>{{ message }}</p>
+<div class="actions">
+<a class="button" href="javascript:history.back()">Regresar</a>
+<a class="button secondary" href="/">Ir al inicio</a>
+</div>
+</div>
+{% endblock %}
