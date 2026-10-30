@@ -104,5 +104,17 @@ class Operations(unittest.TestCase):
             resp = client.get('/reservas')
             self.assertEqual(resp.status_code, 200)
 
+    def test_edit_book_template_renders_inline_fields(self):
+        client = biblioteca.app.test_client()
+        fake_con = MagicMock()
+        with patch('biblioteca_escolar.biblioteca.db') as mock_db, patch('biblioteca_escolar.biblioteca.query', return_value=[]):
+            mock_db.return_value.__enter__.return_value = fake_con
+            with client.session_transaction() as sess:
+                sess['user'] = {'id': 1, 'usuario': 'admin', 'nombre': 'Admin', 'rol': 'ADMIN'}
+            resp = client.get('/catalogo/libros/editar')
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn('nueva_categoria', resp.get_data(as_text=True))
+            self.assertIn('nuevo_autor_nombre', resp.get_data(as_text=True))
+
 if __name__ == '__main__':
     unittest.main()

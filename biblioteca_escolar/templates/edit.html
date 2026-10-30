@@ -5,18 +5,33 @@
 <form class="panel form-grid" method="post">
 <input type="hidden" name="csrf" value="{{ session.csrf }}">
 {% for name, title, kind, required, length in fields %}
-<label>{{ title }}{{ ' *' if required else '' }}
 {% if kind == 'select' %}
-<select name="{{ name }}" required>
-<option value="">Selecciona una categoría</option>
+<label>{{ title }}{{ ' *' if required and table != 'libros' else '' }}
+<select name="{{ name }}" {{ 'required' if required and table != 'libros' else '' }}>
+<option value="">Selecciona una categoría existente</option>
 {% for c in categories %}
 <option value="{{ c.id_categoria }}" {{ 'selected' if row.get(name)==c.id_categoria else '' }}>{{ c.nombre_categoria }}</option>
 {% endfor %}
 </select>
-{% else %}
-<input name="{{ name }}" type="{{ kind }}" value="{{ row.get(name) if row.get(name) is not none else '' }}" {{ 'required' if required else '' }} {% if length and kind!='number' %}maxlength="{{ length }}"{% endif %} {% if kind=='number' %}min="{{ 1 if name=='publicacion' else 0 }}" step="1"{% endif %}>
-{% endif %}
 </label>
+{% if table == 'libros' and name == 'id_categoria' %}
+<div class="inline-create-card">
+<span class="inline-create-title">+ O registrar una nueva categoría directamente</span>
+<div class="sub-form-grid">
+<label>Nombre de la categoría
+<input name="nueva_categoria" type="text" placeholder="Ej. Robótica o Filosofía" maxlength="50">
+</label>
+<label>Descripción (opcional)
+<input name="nueva_categoria_desc" type="text" placeholder="Breve descripción de la categoría" maxlength="200">
+</label>
+</div>
+</div>
+{% endif %}
+{% else %}
+<label>{{ title }}{{ ' *' if required else '' }}
+<input name="{{ name }}" type="{{ kind }}" value="{{ row.get(name) if row.get(name) is not none else '' }}" {{ 'required' if required else '' }} {% if length and kind!='number' %}maxlength="{{ length }}"{% endif %} {% if kind=='number' %}min="{{ 1 if name=='publicacion' else 0 }}" step="1"{% endif %}>
+</label>
+{% endif %}
 {% endfor %}
 {% if table == 'libros' %}
 <fieldset>
@@ -27,8 +42,22 @@
 {{ a.nombre }}
 </label>
 {% else %}
-<p>Primero registra los autores en el menú Autores.</p>
+<p class="hint">No hay autores registrados previamente.</p>
 {% endfor %}
+<div class="inline-create-card">
+<span class="inline-create-title">+ O registrar un nuevo autor y asignarlo a este libro</span>
+<div class="sub-form-grid-3">
+<label>Nombre del autor *
+<input name="nuevo_autor_nombre" type="text" placeholder="Ej. Isaac" maxlength="50">
+</label>
+<label>Apellido del autor *
+<input name="nuevo_autor_apellido" type="text" placeholder="Ej. Newton" maxlength="50">
+</label>
+<label>Nacionalidad (opcional)
+<input name="nuevo_autor_nacionalidad" type="text" placeholder="Ej. Británica" maxlength="50">
+</label>
+</div>
+</div>
 </fieldset>
 <p class="hint">Disponibles es el saldo físico en estantería. Si ingresas el ISBN con formato estándar (ej. 978-0307474728), se mostrará automáticamente la portada del catálogo digital.</p>
 {% endif %}

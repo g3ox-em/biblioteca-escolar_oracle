@@ -53,7 +53,11 @@ label{font-size:13px;font-weight:600;display:block}
 input,select,textarea{display:block;border:1px solid #cbd8db;border-radius:6px;padding:10px;background:white;font:inherit;max-width:100%;width:100%;margin-top:6px;color:#183b42}
 .filters input{width:200px}
 .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;max-width:850px}
-.form-grid .actions,.form-grid fieldset,.form-grid .hint{grid-column:1/-1}
+.form-grid .actions,.form-grid fieldset,.form-grid .hint,.form-grid .inline-create-card{grid-column:1/-1}
+.inline-create-card{background:#f4f8f8;border:1px dashed #0f827a;border-radius:8px;padding:14px;margin-top:12px}
+.inline-create-title{font-size:12px;font-weight:700;color:#0f827a;letter-spacing:.5px;display:block;margin-bottom:8px}
+.sub-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sub-form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 fieldset{border:1px solid #dce4e7;border-radius:7px;padding:16px}
 .check{display:inline-flex;gap:8px;align-items:center;margin:8px 16px 8px 0}
 .check input{width:auto;margin:0}
@@ -105,6 +109,7 @@ nav a{font-size:12px;padding:6px 10px}
 aside small{display:none}
 main{width:100%;padding:18px}
 .form-grid{grid-template-columns:1fr}
+.sub-form-grid,.sub-form-grid-3{grid-template-columns:1fr}
 }
 @media print{
 aside,header,.filters,.actions report,.button,button,form,.pagination,td:last-child,th:last-child{display:none}

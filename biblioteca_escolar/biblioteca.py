@@ -395,9 +395,27 @@ def edit(table, ident=None):
         authors = query(con, "SELECT id_autor, nombre||' '||apellido nombre FROM autores ORDER BY nombre") if table == 'libros' else []
         selected = [r['id_autor'] for r in query(con, 'SELECT id_autor FROM libro_autor WHERE id_libro=:i', {'i': ident})] if table == 'libros' and ident else []
         if request.method == 'POST':
+            cat_id = None
+            if table == 'libros':
+                nueva_cat_nom = request.form.get('nueva_categoria', '').strip()
+                if nueva_cat_nom:
+                    if len(nueva_cat_nom) > 50:
+                        raise ValueError('Nombre de categoría: máximo 50 caracteres.')
+                    existing_cat = query(con, "SELECT id_categoria FROM categorias WHERE LOWER(nombre_categoria)=:n", {'n': nueva_cat_nom.lower()})
+                    if existing_cat:
+                        cat_id = existing_cat[0]['id_categoria']
+                    else:
+                        with con.cursor() as cur:
+                            out = cur.var(oracledb.NUMBER)
+                            cur.execute("INSERT INTO categorias (nombre_categoria, descripcion) VALUES (:n, :d) RETURNING id_categoria INTO :out",
+                                        {'n': nueva_cat_nom, 'd': request.form.get('nueva_categoria_desc', '').strip()[:200] or None, 'out': out})
+                            cat_id = int(out.getvalue()[0])
+                        audit_log(con, 'CATEGORIAS', 'INSERT', cat_id, f'Creada nueva categoria {nueva_cat_nom}')
             data = {}
             for name, title, kind, required, length in fields:
                 value = request.form.get(name, '').strip()
+                if table == 'libros' and name == 'id_categoria' and cat_id:
+                    value = str(cat_id)
                 if required and not value: raise ValueError(f'{title} es obligatorio.')
                 if kind in ('number', 'select') and value:
                     value = integer(value, title, 1 if kind == 'select' else 0)
@@ -416,9 +434,32 @@ def edit(table, ident=None):
                     ident = int(out.getvalue()[0])
                 audit_log(con, table.upper(), 'INSERT', ident, f'Creado nuevo registro en {table}')
             if table == 'libros':
+                author_ids = set()
+                for author in request.form.getlist('autores'):
+                    if author:
+                        author_ids.add(integer(author, 'Autor', 1))
+                nuevo_autor_nom = request.form.get('nuevo_autor_nombre', '').strip()
+                nuevo_autor_ape = request.form.get('nuevo_autor_apellido', '').strip()
+                if nuevo_autor_nom or nuevo_autor_ape:
+                    if not nuevo_autor_nom or not nuevo_autor_ape:
+                        raise ValueError('Para registrar un nuevo autor ingresa tanto el nombre como el apellido.')
+                    if len(nuevo_autor_nom) > 50 or len(nuevo_autor_ape) > 50:
+                        raise ValueError('Nombre y apellido del autor: máximo 50 caracteres cada uno.')
+                    existing_aut = query(con, "SELECT id_autor FROM autores WHERE LOWER(nombre)=:n AND LOWER(apellido)=:a",
+                                         {'n': nuevo_autor_nom.lower(), 'a': nuevo_autor_ape.lower()})
+                    if existing_aut:
+                        author_ids.add(existing_aut[0]['id_autor'])
+                    else:
+                        with con.cursor() as cur:
+                            out = cur.var(oracledb.NUMBER)
+                            cur.execute("INSERT INTO autores (nombre, apellido, nacionalidad) VALUES (:n, :a, :nac) RETURNING id_autor INTO :out",
+                                        {'n': nuevo_autor_nom, 'a': nuevo_autor_ape, 'nac': request.form.get('nuevo_autor_nacionalidad', '').strip()[:50] or None, 'out': out})
+                            new_aut_id = int(out.getvalue()[0])
+                        audit_log(con, 'AUTORES', 'INSERT', new_aut_id, f'Creado nuevo autor {nuevo_autor_nom} {nuevo_autor_ape}')
+                        author_ids.add(new_aut_id)
                 execute(con, 'DELETE FROM libro_autor WHERE id_libro=:i', {'i': ident})
-                for author in set(request.form.getlist('autores')):
-                    execute(con, 'INSERT INTO libro_autor(id_libro,id_autor) VALUES(:i,:a)', {'i': ident, 'a': integer(author, 'Autor', 1)})
+                for a_id in author_ids:
+                    execute(con, 'INSERT INTO libro_autor(id_libro,id_autor) VALUES(:i,:a)', {'i': ident, 'a': a_id})
             flash('Registro guardado correctamente.')
             return redirect(url_for('listing', table=table))
     return render_template('edit.html', table=table, label=label, fields=fields, row=row, categories=categories, authors=authors, selected=selected)
