@@ -78,8 +78,6 @@ td small{display:block;color:#76868b;margin-top:4px}
 .loan-actions{display:flex;gap:8px;align-items:center}
 .login-wrapper{display:flex;justify-content:center;padding:30px 0}
 .login-panel{max-width:440px;width:100%}
-.demo-box{margin-top:24px;padding:14px;background:#f8fafb;border:1px solid #e2e8ea;border-radius:8px;font-size:12px}
-.demo-box ul{margin:8px 0 0;padding-left:18px}
 .certificate-paper{background:white;border:2px solid #cbd8db;border-radius:10px;padding:40px;margin-top:24px;box-shadow:0 4px 14px rgba(0,0,0,.04);max-width:850px}
 .cert-header{text-align:center;border-bottom:2px solid #113b40;padding-bottom:18px;margin-bottom:24px}
 .cert-header h2{font-size:20px;margin:0 0 6px;color:#113b40}
