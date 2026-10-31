@@ -284,6 +284,18 @@ LEFT JOIN prestamos p ON l.id_libro = p.id_libro
 GROUP BY l.id_libro, l.titulo
 ORDER BY total_prestamos DESC;
 
+CREATE MATERIALIZED VIEW mv_resumen_categorias
+BUILD IMMEDIATE
+REFRESH COMPLETE ON DEMAND
+AS
+SELECT c.id_categoria,
+       c.nombre_categoria,
+       COUNT(l.id_libro) AS total_libros,
+       NVL(SUM(l.disponible), 0) AS total_disponibles
+FROM categorias c
+LEFT JOIN libros l ON c.id_categoria = l.id_categoria
+GROUP BY c.id_categoria, c.nombre_categoria;
+
 CREATE OR REPLACE PROCEDURE sp_registrar_prestamo (
     p_id_estudiante  IN NUMBER,
     p_id_libro       IN NUMBER,
@@ -475,4 +487,30 @@ VALUES (3, 2, DATE '2026-09-15', DATE '2026-09-22', 'Atrasado');
 INSERT INTO devoluciones (id_prestamo, fecha_devolucion, observaciones, monto_multa)
 VALUES (2, DATE '2026-09-26', 'Entregado a tiempo, buen estado', 0);
 
+INSERT INTO reservas (id_estudiante, id_libro, fecha_reserva, estado)
+VALUES (1, 2, DATE '2026-10-02', 'Pendiente');
+
 COMMIT;
+
+SELECT p.id_prestamo AS id_registro,
+       e.carnet,
+       e.nombre || ' ' || e.apellido AS estudiante,
+       l.titulo AS libro,
+       p.fecha_prestamo AS fecha,
+       p.estado AS estado,
+       'PRESTAMO' AS tipo
+FROM prestamos p
+JOIN estudiantes e ON e.id_estudiante = p.id_estudiante
+JOIN libros l ON l.id_libro = p.id_libro
+UNION
+SELECT r.id_reserva AS id_registro,
+       e.carnet,
+       e.nombre || ' ' || e.apellido AS estudiante,
+       l.titulo AS libro,
+       r.fecha_reserva AS fecha,
+       r.estado AS estado,
+       'RESERVA' AS tipo
+FROM reservas r
+JOIN estudiantes e ON e.id_estudiante = r.id_estudiante
+JOIN libros l ON l.id_libro = r.id_libro;
+
